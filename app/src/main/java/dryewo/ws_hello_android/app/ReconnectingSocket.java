@@ -21,7 +21,7 @@ public class ReconnectingSocket {
     private volatile StatusCallback statusCallback;
 
     public static final int CLOSED = 0;
-    public static final int OPEN = 0;
+    public static final int OPEN = 1;
 
     public interface StringCallback {
         public void onString(String string);
@@ -105,7 +105,7 @@ public class ReconnectingSocket {
                                 @Override
                                 public void run() {
                                     if (statusCallback != null)
-                                        statusCallback.onStatus(CLOSED);
+                                        statusCallback.onStatus(OPEN);
                                 }
                             });
                         }
