@@ -64,12 +64,10 @@ public class ReconnectingSocket {
     private Runnable reconnect = new Runnable() {
         @Override
         public void run() {
-            Log.i(MainActivity.TAG, "Reconnecting");
             AsyncHttpClient.getDefaultInstance().websocket(new AsyncHttpGet(url),
                     null, new AsyncHttpClient.WebSocketConnectCallback() {
                         @Override
                         public void onCompleted(Exception ex, WebSocket ws) {
-                            Log.i(MainActivity.TAG, "WebSocketConnectCallback: " + ex + ", " + ws);
                             if (ex != null) {
                                 handler.postDelayed(reconnect, timeoutMs);
                                 return;
@@ -89,7 +87,6 @@ public class ReconnectingSocket {
                             });
                             webSocket.setClosedCallback(new CompletedCallback() {
                                 public void onCompleted(Exception ex) {
-                                    Log.i(MainActivity.TAG, "ClosedCallback");
                                     handler.post(new Runnable() {
                                         @Override
                                         public void run() {
