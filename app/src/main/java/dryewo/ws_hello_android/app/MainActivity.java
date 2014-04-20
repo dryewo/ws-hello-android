@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         });
     }
 
-    private ReconnectingSocket socket = new ReconnectingSocket("http://192.168.1.187:4040/write", 1000,
+    private ReconnectingSocket socket = new ReconnectingSocket("http://ws-hello.herokuapp.com/write", 1000,
             new ReconnectingSocket.StringCallback() {
                 @Override
                 public void onString(String string) {
@@ -83,9 +83,9 @@ public class MainActivity extends Activity {
     );
 
     private String formatLocation(Location location) {
-        final DateFormat fmt = new SimpleDateFormat("HH:mm:ss.SSS");
+        final DateFormat fmt = new SimpleDateFormat("HH:mm:ss.SS");
         final String locationTime = fmt.format(new Date(location.getTime()));
-        final String locationStr = String.format("(%.6f; %.6f) %s", location.getLatitude(), location.getLongitude(), locationTime);
+        final String locationStr = String.format("(%.6f;%.6f) %s", location.getLatitude(), location.getLongitude(), locationTime);
         return locationStr;
     }
 
