@@ -42,4 +42,13 @@
         android:layout_alignParentRight="true"
         android:layout_alignBottom="@id/editText"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:id="@+id/locationText"
+        android:layout_below="@+id/editText"
+        android:layout_alignRight="@+id/editText"
+        android:layout_alignEnd="@+id/editText"/>
+
 </RelativeLayout>

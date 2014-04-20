@@ -1,8 +1,11 @@
 package dryewo.ws_hello_android.app;
 
 import android.app.Activity;
-import android.graphics.Color;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -15,6 +18,10 @@ import android.widget.TextView;
 import com.joanzapata.android.iconify.IconDrawable;
 import com.joanzapata.android.iconify.Iconify;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class MainActivity extends Activity {
     public static final String TAG = "MainActivity";
@@ -22,6 +29,7 @@ public class MainActivity extends Activity {
     private TextView readerCountText;
     private ImageView connectionStatus;
     private EditText editText;
+    private TextView locationText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +39,11 @@ public class MainActivity extends Activity {
         readerCountText = (TextView) findViewById(R.id.readerCount);
         connectionStatus = (ImageView) findViewById(R.id.connectionStatus);
         editText = (EditText) findViewById(R.id.editText);
+        locationText = (TextView) findViewById(R.id.locationText);
+
+        final Location lastLocation = getLocationManager().getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (lastLocation != null)
+            locationText.setText(formatLocation(lastLocation));
 
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -69,14 +82,53 @@ public class MainActivity extends Activity {
             }
     );
 
+    private String formatLocation(Location location) {
+        final DateFormat fmt = new SimpleDateFormat("HH:mm:ss.SSS");
+        final String locationTime = fmt.format(new Date(location.getTime()));
+        final String locationStr = String.format("(%.6f; %.6f) %s", location.getLatitude(), location.getLongitude(), locationTime);
+        return locationStr;
+    }
+
+    private LocationListener locationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            final String locationStr = formatLocation(location);
+            Log.i(TAG, "Location: " + locationStr);
+            locationText.setText(locationStr);
+            socket.send(locationStr);
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+    };
+
+    private LocationManager getLocationManager() {
+        return (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+    }
+
+    private void startLocationWatch() {
+        getLocationManager().requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+    }
+
+    private void stopLocationWatch() {
+        getLocationManager().removeUpdates(locationListener);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         socket.resume();
+        startLocationWatch();
     }
 
     @Override
     protected void onPause() {
+        stopLocationWatch();
         socket.pause();
         super.onPause();
     }
