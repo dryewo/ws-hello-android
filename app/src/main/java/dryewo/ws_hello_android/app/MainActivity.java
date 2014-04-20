@@ -5,15 +5,30 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 
 public class MainActivity extends Activity {
     public static final String TAG = "MainActivity";
 
+    private TextView readerCountText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        readerCountText = (TextView) findViewById(R.id.readerCount);
+
+        socket.setStatusCallback(new ReconnectingSocket.StatusCallback() {
+            @Override
+            public void onStatus(int status) {
+                if (status == ReconnectingSocket.CLOSED) {
+                    if (readerCountText != null)
+                        readerCountText.setText("");
+                }
+            }
+        });
     }
 
     private ReconnectingSocket socket = new ReconnectingSocket("http://192.168.1.187:4040/write", 1000,
@@ -21,6 +36,8 @@ public class MainActivity extends Activity {
                 @Override
                 public void onString(String string) {
                     Log.i(TAG, "Got string: " + string);
+                    if (readerCountText != null)
+                        readerCountText.setText(string);
                 }
             }
     );

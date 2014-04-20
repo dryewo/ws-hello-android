@@ -9,21 +9,36 @@ import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.WebSocket;
 
 public class ReconnectingSocket {
-    private WebSocket webSocket;
-    private Handler handler = new Handler();
+    private volatile WebSocket webSocket;
+    private volatile boolean paused;
 
     private final String url;
     private final int timeoutMs;
-    private final StringCallback callback;
+    private final StringCallback stringCallback;
+
+    private final Handler handler = new Handler();
+
+    private volatile StatusCallback statusCallback;
+
+    public static final int CLOSED = 0;
+    public static final int OPEN = 0;
 
     public interface StringCallback {
         public void onString(String string);
     }
 
-    public ReconnectingSocket(String url, int timeoutMs, StringCallback callback) {
+    public interface StatusCallback {
+        public void onStatus(int status);
+    }
+
+    public void setStatusCallback(StatusCallback statusCallback) {
+        this.statusCallback = statusCallback;
+    }
+
+    public ReconnectingSocket(String url, int timeoutMs, StringCallback stringCallback) {
         this.url = url;
         this.timeoutMs = timeoutMs;
-        this.callback = callback;
+        this.stringCallback = stringCallback;
     }
 
     public boolean send(String str) {
@@ -35,13 +50,15 @@ public class ReconnectingSocket {
     }
 
     public void resume() {
+        paused = false;
         reconnect.run();
     }
 
     public void pause() {
+        paused = true;
+        handler.removeCallbacks(reconnect);
         webSocket.close();
         webSocket = null;
-        handler.removeCallbacks(reconnect);
     }
 
     private Runnable reconnect = new Runnable() {
@@ -60,15 +77,35 @@ public class ReconnectingSocket {
 
                             webSocket = ws;
                             webSocket.setStringCallback(new WebSocket.StringCallback() {
-                                public void onStringAvailable(String s) {
-                                    if (callback != null)
-                                        callback.onString(s);
+                                public void onStringAvailable(final String s) {
+                                    handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (stringCallback != null)
+                                                stringCallback.onString(s);
+                                        }
+                                    });
                                 }
                             });
                             webSocket.setClosedCallback(new CompletedCallback() {
                                 public void onCompleted(Exception ex) {
                                     Log.i(MainActivity.TAG, "ClosedCallback");
-                                    handler.postDelayed(reconnect, timeoutMs);
+                                    handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if (statusCallback != null)
+                                                statusCallback.onStatus(CLOSED);
+                                        }
+                                    });
+                                    if (!paused)
+                                        handler.postDelayed(reconnect, timeoutMs);
+                                }
+                            });
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCallback != null)
+                                        statusCallback.onStatus(CLOSED);
                                 }
                             });
                         }
