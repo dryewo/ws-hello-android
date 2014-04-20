@@ -43,9 +43,9 @@ public class MainActivity extends Activity {
 
         socket.setStatusCallback(new ReconnectingSocket.StatusCallback() {
             private final Drawable openImage = new IconDrawable(MainActivity.this, Iconify.IconValue.fa_check)
-                    .actionBarSize().color(Color.GREEN);
+                    .actionBarSize().color(0xFF008000);
             private final Drawable closedImage = new IconDrawable(MainActivity.this, Iconify.IconValue.fa_times)
-                    .actionBarSize().color(Color.RED);
+                    .actionBarSize().color(0xFF800000);
 
             @Override
             public void onStatus(int status) {
