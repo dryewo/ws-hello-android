@@ -5,8 +5,10 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,6 +21,7 @@ public class MainActivity extends Activity {
 
     private TextView readerCountText;
     private ImageView connectionStatus;
+    private EditText editText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +30,16 @@ public class MainActivity extends Activity {
 
         readerCountText = (TextView) findViewById(R.id.readerCount);
         connectionStatus = (ImageView) findViewById(R.id.connectionStatus);
+        editText = (EditText) findViewById(R.id.editText);
+
+        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (socket.send(v.getText().toString()))
+                    v.setText("");
+                return true;
+            }
+        });
 
         socket.setStatusCallback(new ReconnectingSocket.StatusCallback() {
             private final Drawable openImage = new IconDrawable(MainActivity.this, Iconify.IconValue.fa_check)
@@ -38,8 +51,7 @@ public class MainActivity extends Activity {
             public void onStatus(int status) {
                 if (status == ReconnectingSocket.CLOSED) {
                     connectionStatus.setImageDrawable(closedImage);
-                    if (readerCountText != null)
-                        readerCountText.setText("");
+                    readerCountText.setText("");
                 } else {
                     connectionStatus.setImageDrawable(openImage);
                 }
@@ -52,8 +64,7 @@ public class MainActivity extends Activity {
                 @Override
                 public void onString(String string) {
                     Log.i(TAG, "Got string: " + string);
-                    if (readerCountText != null)
-                        readerCountText.setText(string);
+                    readerCountText.setText(string);
                 }
             }
     );
